@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VulnScanner — Network Vulnerability Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;--bg4:#21262d;
+  --border:#21262d;--border2:#30363d;
+  --text:#e6edf3;--text2:#8b949e;--text3:#484f58;
+  --accent:#58a6ff;--accent-bg:#1f6feb22;
+  --critical:#f85149;--critical-bg:#3d0e0c;--critical-border:#6e1a18;
+  --high:#ff7b72;--high-bg:#2d0d0a;
+  --medium:#e3b341;--medium-bg:#2d2008;--medium-border:#6e530f;
+  --low:#3fb950;--low-bg:#0d2818;--low-border:#1a5e2a;
+  --info:#8b949e;
+  --success:#3fb950;--success-bg:#0d2818;
+  --warning:#e3b341;--warning-bg:#2d2008;
+  --danger:#f85149;--danger-bg:#3d0e0c;
+  --sans:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --radius:8px;--radius-lg:12px;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* Layout */
+.topbar{border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;gap:12px;position:sticky;top:0;background:var(--bg);z-index:10}
+.logo{width:34px;height:34px;background:#1f6feb;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo svg{width:18px;height:18px}
+.brand-name{font-weight:600;font-size:15px;font-family:var(--mono);color:var(--text)}
+.brand-sub{font-size:10px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase}
+.nmap-badge{margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono)}
+
+.page{max-width:920px;margin:0 auto;padding:28px 20px}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px}
+.section-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+
+/* Warning bar */
+.warn-bar{background:var(--warning-bg);border:1px solid var(--medium-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:20px;font-size:12px;color:var(--warning);display:flex;gap:10px;align-items:flex-start}
+.warn-bar svg{flex-shrink:0;margin-top:1px}
+
+/* Form */
+.form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.input-wrap{flex:2;min-width:200px}
+.select-wrap{flex:1;min-width:180px}
+label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+input[type=text],select{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:9px 13px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s}
+input[type=text]:focus,select:focus{border-color:var(--accent)}
+input[type=text]::placeholder{color:var(--text3);font-family:var(--mono);font-size:12px}
+select{cursor:pointer}
+select option{background:var(--bg2)}
+
+/* Profile hint */
+.profile-hint{font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--bg3);border-radius:var(--radius);padding:8px 12px;margin-bottom:14px;line-height:1.7}
+.profile-hint .cmd{color:var(--accent)}
+.profile-hint .desc{color:var(--success)}
+
+/* Button */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 22px;border-radius:var(--radius);border:none;font-size:13px;font-weight:500;font-family:var(--sans);cursor:pointer;transition:opacity .15s,background .15s}
+.btn-primary{background:var(--accent);color:#0d1117}
+.btn-primary:hover{background:#79b8ff}
+.btn-primary:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #ffffff44;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Log box */
+#log-card{display:none}
+.log-box{background:var(--bg);border-radius:var(--radius);padding:12px 14px;font-family:var(--mono);font-size:11px;color:var(--text2);max-height:140px;overflow-y:auto;line-height:2}
+.log-ts{color:var(--text3)}
+.log-ok{color:var(--success)}
+.log-err{color:var(--danger)}
+.live-dot{width:7px;height:7px;background:var(--success);border-radius:50%;display:inline-block;animation:pulse 1s ease infinite;margin-right:6px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:var(--bg3);border-radius:var(--radius);padding:13px 15px}
+.stat-val{font-size:24px;font-weight:600;font-family:var(--mono)}
+.stat-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+
+/* Tabs */
+.tab-bar{display:flex;border-bottom:1px solid var(--border)}
+.tab{padding:8px 18px;font-size:12px;font-weight:500;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:color .15s,border-color .15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover:not(.active){color:var(--text)}
+
+/* Host card */
+.host-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px;background:var(--bg2)}
+.host-head{padding:12px 16px;background:var(--bg3);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.host-ip{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--accent)}
+.host-hn{font-size:11px;color:var(--text2);font-family:var(--mono)}
+.status-pill{font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;letter-spacing:.05em}
+.pill-up{background:var(--low-bg);color:var(--success);border:1px solid var(--low-border)}
+.pill-down{background:var(--critical-bg);color:var(--danger);border:1px solid var(--critical-border)}
+.host-meta{margin-left:auto;font-size:11px;color:var(--text2);display:flex;gap:14px}
+.meta-item{display:flex;align-items:center;gap:4px}
+.meta-crit{color:var(--danger)}
+
+/* Port table */
+.tab-body{min-height:40px}
+.port-table{width:100%;border-collapse:collapse;font-size:12px}
+.port-table th{text-align:left;padding:7px 14px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)}
+.port-table td{padding:8px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.port-table tr:last-child td{border-bottom:none}
+.port-table tr:hover td{background:var(--bg3)}
+.port-num{font-family:var(--mono);color:var(--accent);font-weight:600}
+.port-ver{font-family:var(--mono);font-size:11px;color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Badges */
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.badge-critical{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+.badge-high{background:var(--high-bg);color:var(--high);border:1px solid #6e2420}
+.badge-medium{background:var(--medium-bg);color:var(--medium);border:1px solid var(--medium-border)}
+.badge-low{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
+.badge-info{background:var(--bg3);color:var(--info);border:1px solid var(--border2)}
+
+/* Findings */
+.finding{border-bottom:1px solid var(--border);cursor:pointer}
+.finding:last-child{border-bottom:none}
+.finding-head{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:12px;color:var(--text)}
+.finding-head:hover{background:var(--bg3)}
+.chevron{color:var(--text3);font-size:10px;transition:transform .15s;flex-shrink:0}
+.chevron.open{transform:rotate(90deg)}
+.finding-detail{display:none;padding:8px 14px 12px 42px;font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg3);border-top:1px solid var(--border)}
+.finding-title{flex:1}
+
+/* Empty/success states */
+.empty-state{padding:20px;text-align:center;font-size:12px;color:var(--text2)}
+.success-state{padding:18px;text-align:center;font-size:12px;color:var(--success);display:flex;align-items:center;justify-content:center;gap:8px}
+
+/* Recommendations */
+.recs{list-style:none}
+.recs li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)}
+.recs li:last-child{border-bottom:none}
+.rec-icon{color:var(--warning);flex-shrink:0;margin-top:1px}
+
+/* Scan summary bar */
+.scan-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.scan-target{font-size:15px;font-weight:600;font-family:var(--mono);color:var(--text)}
+.scan-cmd{font-size:11px;color:var(--text2);font-family:var(--mono);margin-top:2px}
+.scan-ok{font-size:12px;color:var(--success);display:flex;align-items:center;gap:5px}
+.summary-text{font-size:13px;color:var(--text2);background:var(--bg3);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;line-height:1.6}
+
+/* Error */
+.error-box{background:var(--danger-bg);border:1px solid var(--critical-border);border-radius:var(--radius);padding:14px 18px;color:var(--danger);font-size:13px;margin-bottom:16px}
+
+/* No results */
+#results{display:none}
+
+/* API key setup */
+.api-setup{background:var(--accent-bg);border:1px solid #1f6feb55;border-radius:var(--radius-lg);padding:20px;margin-bottom:20px}
+.api-setup h3{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.api-setup p{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.7}
+.api-row{display:flex;gap:8px}
+.api-row input{flex:1;font-family:var(--mono);font-size:12px}
+.btn-sm{padding:6px 14px;font-size:12px}
+.key-saved{font-size:11px;color:var(--success);margin-top:6px;display:none}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+  </div>
+  <div>
+    <div class="brand-name">VulnScanner</div>
+    <div class="brand-sub">Network Vulnerability Assessment</div>
+  </div>
+  <div class="nmap-badge">Powered by Nmap × Claude AI</div>
+</div>
+
+<div class="page">
+
+  <!-- API Key setup -->
+  <div class="api-setup" id="api-setup">
+    <h3>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Anthropic API key required
+    </h3>
+    <p>This tool uses Claude AI to simulate realistic Nmap scan results. Enter your Anthropic API key below — it's stored only in your browser's sessionStorage and never sent anywhere except <code>api.anthropic.com</code>.</p>
+    <div class="api-row">
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." />
+      <button class="btn btn-primary btn-sm" onclick="saveKey()">Save key</button>
+    </div>
+    <div class="key-saved" id="key-saved">✓ Key saved — ready to scan</div>
+  </div>
+
+  <!-- Warning -->
+  <div class="warn-bar">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span><strong>Authorized use only.</strong> Only scan systems you own or have explicit written permission to test. Unauthorized scanning may be illegal in your jurisdiction.</span>
+  </div>
+
+  <!-- Scan form -->
+  <div class="card">
+    <div class="section-label">Configure scan</div>
+    <div class="form-row">
+      <div class="input-wrap">
+        <label for="target">Target</label>
+        <input type="text" id="target" placeholder="192.168.1.1  /  scanme.nmap.org  /  10.0.0.0/24" />
+      </div>
+      <div class="select-wrap">
+        <label for="profile">Scan profile</label>
+        <select id="profile" onchange="updateHint()">
+          <option value="quick">Quick — top 100 ports</option>
+          <option value="standard" selected>Standard — version + scripts</option>
+          <option value="full">Full — all 65535 ports</option>
+          <option value="vuln">Vulnerability — NSE scripts</option>
+          <option value="udp">UDP — top 200 ports</option>
+          <option value="stealth">Stealth SYN (root)</option>
+          <option value="os">OS Detection (root)</option>
+          <option value="aggressive">Aggressive — everything</option>
+          <option value="ping">Ping Sweep — hosts only</option>
+          <option value="firewall">Firewall Evasion — ACK</option>
+        </select>
+      </div>
+    </div>
+    <div class="profile-hint" id="profile-hint">
+      <span class="cmd">nmap</span> -sV -sC -T4 -p 1-1000 &lt;target&gt;
+      <span class="desc"> — service/version detection on top 1000 ports</span>
+    </div>
+    <button class="btn btn-primary" id="scan-btn" onclick="startScan()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Start scan
+    </button>
+  </div>
+
+  <!-- Log -->
+  <div class="card" id="log-card">
+    <div class="section-label">
+      <span class="live-dot" id="live-dot"></span>Live output
+    </div>
+    <div class="log-box" id="log-box"></div>
+  </div>
+
+  <!-- Error -->
+  <div id="error-box" style="display:none"></div>
+
+  <!-- Results -->
+  <div id="results"></div>
+
+</div>
+
+<script>
+const PROFILES = {
+  quick:     { args: "-T4 -F --open",              desc: "top 100 ports, fast" },
+  standard:  { args: "-sV -sC -T4 -p 1-1000",      desc: "service/version detection on top 1000 ports" },
+  full:      { args: "-sV -sC -T4 -p-",             desc: "all 65535 ports with version detection" },
+  vuln:      { args: "-sV -sC --script=vuln -T4",   desc: "NSE vulnerability scripts on common ports" },
+  udp:       { args: "-sU -sV -T4 --top-ports 200", desc: "top 200 UDP ports" },
+  stealth:   { args: "-sS -sV -T3 -p 1-1000",       desc: "SYN stealth scan — requires root/sudo" },
+  os:        { args: "-O -sV -T4",                  desc: "OS fingerprinting — requires root/sudo" },
+  aggressive:{ args: "-A -T4",                      desc: "OS + version + scripts + traceroute" },
+  ping:      { args: "-sn",                         desc: "host discovery only, no port scan" },
+  firewall:  { args: "-sA -T4 -p 1-1000",           desc: "ACK scan to map firewall rules" },
+};
+
+function updateHint() {
+  const p = PROFILES[document.getElementById("profile").value];
+  document.getElementById("profile-hint").innerHTML =
+    `<span class="cmd">nmap</span> ${p.args} &lt;target&gt;<span class="desc"> — ${p.desc}</span>`;
+}
+
+function saveKey() {
+  const k = document.getElementById("api-key-input").value.trim();
+  if (!k.startsWith("sk-ant-")) { alert("That doesn't look like a valid Anthropic API key (should start with sk-ant-)"); return; }
+  sessionStorage.setItem("vuln_api_key", k);
+  document.getElementById("key-saved").style.display = "block";
+  document.getElementById("api-setup").style.borderColor = "#1a5e2a";
+}
+
+function getKey() {
+  return sessionStorage.getItem("vuln_api_key") || "";
+}
+
+let scanning = false;
+
+document.getElementById("target").addEventListener("keydown", e => { if (e.key === "Enter") startScan(); });
+
+// Check if key already saved
+window.addEventListener("load", () => {
+  if (getKey()) {
+    document.getElementById("key-saved").style.display = "block";
+    document.getElementById("api-setup").style.borderColor = "#1a5e2a";
+  }
+});
+
+async function startScan() {
+  if (scanning) return;
+  const target = document.getElementById("target").value.trim();
+  if (!target) { document.getElementById("target").focus(); return; }
+
+  const key = getKey();
+  if (!key) { document.getElementById("api-key-input").focus(); addError("Please save your Anthropic API key first."); return; }
+
+  const profile = document.getElementById("profile").value;
+  scanning = true;
+
+  const btn = document.getElementById("scan-btn");
+  btn.innerHTML = `<span class="spin"></span> Scanning…`;
+  btn.disabled = true;
+
+  document.getElementById("log-card").style.display = "";
+  document.getElementById("results").innerHTML = "";
+  document.getElementById("results").style.display = "none";
+  document.getElementById("error-box").style.display = "none";
+  const logBox = document.getElementById("log-box");
+  logBox.innerHTML = "";
+
+  addLog(`Target: ${target}`);
+  addLog(`Profile: nmap ${PROFILES[profile].args}`);
+  addLog("Connecting to scan engine…", "ok");
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: `You are a network security scan engine. Respond ONLY with raw JSON — no markdown, no backticks, no explanation. Use exactly this schema:
+{
+  "hosts": [
+    {
+      "ip": "string",
+      "hostname": "string or empty string",
+      "status": "up or down",
+      "os_guess": "string or empty string",
+      "ports": [
+        {
+          "port": "string",
+          "protocol": "tcp or udp",
+          "state": "open",
+          "service": "string",
+          "version": "string or empty string",
+          "severity": "critical or high or medium or low or info"
+        }
+      ],
+      "findings": [
+        {
+          "issue": "string",
+          "detail": "string explaining the risk and how to fix it",
+          "severity": "critical or high or medium or low or info"
+        }
+      ]
+    }
+  ],
+  "summary": "one sentence summary of the overall security posture"
+}
+
+Rules:
+- Simulate REALISTIC Nmap results for the target. Use common real-world services and versions.
+- Severity rules: FTP/Telnet/RDP/SMB exposed = critical. Outdated versions = high. HTTP without HTTPS = medium. SSH = low unless old version.
+- For vuln profile: include CVE IDs in finding details.
+- For CIDR targets like /24: return 3-6 hosts with varied roles (router, server, workstation).
+- For single IPs/hostnames: return 1 host tailored to what it likely is.
+- Include 2-8 open ports per host. Add realistic findings based on those ports.
+- Do NOT include closed/filtered ports — open only.`,
+        messages: [{ role: "user", content: `Scan target: ${target}\nNmap profile: ${PROFILES[profile].args}\nProfile description: ${PROFILES[profile].desc}` }]
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `API error ${res.status}`);
+    }
+
+    addLog("Scan running…", "ok");
+
+    const data = await res.json();
+    const raw = (data.content || []).map(c => c.text || "").join("");
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
+    } catch (e) {
+      throw new Error("Failed to parse scan results — try again");
+    }
+
+    addLog(`Found ${parsed.hosts?.length || 0} host(s) — scan complete.`, "ok");
+    document.getElementById("live-dot").style.animation = "none";
+    renderResults(parsed, target, profile);
+
+  } catch (e) {
+    addLog("Error: " + e.message, "err");
+    document.getElementById("live-dot").style.animation = "none";
+    addError(e.message);
+  }
+
+  scanning = false;
+  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start scan`;
+  btn.disabled = false;
+}
+
+function addLog(msg, cls) {
+  const box = document.getElementById("log-box");
+  const d = document.createElement("div");
+  if (cls) d.classList.add("log-" + cls);
+  const t = new Date().toLocaleTimeString();
+  d.innerHTML = `<span class="log-ts">[${t}]</span>  ${msg}`;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function addError(msg) {
+  const el = document.getElementById("error-box");
+  el.innerHTML = `<div class="error-box">✕ ${msg}</div>`;
+  el.style.display = "";
+}
+
+function badgeClass(sev) {
+  return { critical:"badge-critical", high:"badge-high", medium:"badge-medium", low:"badge-low", info:"badge-info" }[sev] || "badge-info";
+}
+
+function renderResults(data, target, profile) {
+  const hosts = data.hosts || [];
+  let totalOpen = 0, totalFindings = 0, totalCritical = 0, totalHigh = 0;
+  hosts.forEach(h => {
+    totalOpen += (h.ports || []).length;
+    totalFindings += (h.findings || []).length;
+    totalCritical += (h.findings || []).filter(f => f.severity === "critical").length;
+    totalHigh += (h.findings || []).filter(f => f.severity === "high").length;
+  });
+
+  const critCol = totalCritical > 0 ? "var(--critical)" : "var(--success)";
+  const highCol = totalHigh > 0 ? "var(--medium)" : "var(--text2)";
+
+  const recs = [
+    { icon: "🔒", text: "Close or firewall all ports not required for your application to function." },
+    { icon: "🔐", text: "Replace unencrypted protocols (FTP, Telnet, HTTP) with encrypted alternatives (SFTP, SSH, HTTPS)." },
+    { icon: "🛡️", text: "Move database services behind private network interfaces — never expose them to the internet." },
+    { icon: "⬆️", text: "Keep all software (OS, web server, libraries) patched to the latest stable versions." },
+    { icon: "🔑", text: "Restrict remote access services (RDP, VNC, SSH) to VPN-only or specific IP allowlists." },
+    { icon: "📡", text: "Review SNMP community strings and disable SNMPv1/v2 if not required." },
+    { icon: "🚨", text: "Deploy an IDS/IPS (e.g. Snort, Suricata) on perimeter networks for ongoing monitoring." },
+    { icon: "🔄", text: "Schedule regular authenticated scans and integrate into your CI/CD security pipeline." },
+  ];
+
+  const hostsHtml = hosts.length === 0
+    ? `<div class="empty-state">No hosts found. The target may be offline or blocking probes.</div>`
+    : hosts.map((h, i) => buildHostCard(h, i)).join("");
+
+  const html = `
+<div class="card">
+  <div class="scan-meta">
+    <div>
+      <div class="scan-target">${target}</div>
+      <div class="scan-cmd">nmap ${PROFILES[profile].args} · ${new Date().toLocaleString()}</div>
+    </div>
+    <div class="scan-ok">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Scan complete
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val" style="color:var(--accent)">${hosts.length}</div><div class="stat-lbl">Hosts</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--medium)">${totalOpen}</div><div class="stat-lbl">Open ports</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--text2)">${totalFindings}</div><div class="stat-lbl">Findings</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${critCol}">${totalCritical}</div><div class="stat-lbl">Critical</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${highCol}">${totalHigh}</div><div class="stat-lbl">High</div></div>
+  </div>
+  ${data.summary ? `<div class="summary-text">${data.summary}</div>` : ""}
+</div>
+
+<div class="section-label" style="margin-bottom:10px">Hosts (${hosts.length})</div>
+${hostsHtml}
+
+<div class="card" style="margin-top:8px">
+  <div class="section-label">Recommendations</div>
+  <ul class="recs">
+    ${recs.map(r => `<li><span class="rec-icon">${r.icon}</span><span>${r.text}</span></li>`).join("")}
+  </ul>
+</div>`;
+
+  const el = document.getElementById("results");
+  el.innerHTML = html;
+  el.style.display = "";
+}
+
+function buildHostCard(h, idx) {
+  const ports = h.ports || [];
+  const findings = h.findings || [];
+  const criticals = findings.filter(f => f.severity === "critical").length;
+  const pill = h.status === "up" ? "pill-up" : "pill-down";
+
+  const portsTable = ports.length === 0
+    ? `<div class="empty-state">No open ports detected</div>`
+    : `<table class="port-table">
+        <thead><tr><th>Port</th><th>Service</th><th>Version</th><th>Risk</th></tr></thead>
+        <tbody>
+          ${ports.map(p => `
+            <tr>
+              <td class="port-num">${p.port}/${p.protocol}</td>
+              <td>${p.service || "—"}</td>
+              <td class="port-ver">${p.version || "—"}</td>
+              <td><span class="badge ${badgeClass(p.severity)}">${p.severity}</span></td>
+            </tr>`).join("")}
+        </tbody>
+      </table>`;
+
+  const findingsHtml = findings.length === 0
+    ? `<div class="success-state"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> No security findings on this host</div>`
+    : findings.map((f, fi) => `
+        <div class="finding" onclick="toggleFinding(this)">
+          <div class="finding-head">
+            <span class="chevron">▶</span>
+            <span class="badge ${badgeClass(f.severity)}">${f.severity}</span>
+            <span class="finding-title">${f.issue}</span>
+          </div>
+          <div class="finding-detail">${f.detail}</div>
+        </div>`).join("");
+
+  return `
+<div class="host-card">
+  <div class="host-head">
+    <div>
+      <div class="host-ip">${h.ip}</div>
+      ${h.hostname ? `<div class="host-hn">${h.hostname}</div>` : ""}
+      ${h.os_guess ? `<div class="host-hn" style="margin-top:1px">${h.os_guess}</div>` : ""}
+    </div>
+    <span class="status-pill ${pill}">${(h.status || "unknown").toUpperCase()}</span>
+    <div class="host-meta">
+      <span class="meta-item">${ports.length} open ports</span>
+      <span class="meta-item">${findings.length} findings</span>
+      ${criticals > 0 ? `<span class="meta-item meta-crit">${criticals} critical</span>` : ""}
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab(this, 'ports-${idx}', 'findings-${idx}')">Ports (${ports.length})</button>
+    <button class="tab" onclick="switchTab(this, 'findings-${idx}', 'ports-${idx}')">Findings (${findings.length})</button>
+  </div>
+  <div class="tab-body" id="ports-${idx}">${portsTable}</div>
+  <div class="tab-body" id="findings-${idx}" style="display:none">${findingsHtml}</div>
+</div>`;
+}
+
+function switchTab(btn, showId, hideId) {
+  btn.closest(".host-card").querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(showId).style.display = "";
+  document.getElementById(hideId).style.display = "none";
+}
+
+function toggleFinding(el) {
+  const detail = el.querySelector(".finding-detail");
+  const chevron = el.querySelector(".chevron");
+  const isOpen = detail.style.display !== "none";
+  detail.style.display = isOpen ? "none" : "";
+  chevron.classList.toggle("open", !isOpen);
+  chevron.textContent = isOpen ? "▶" : "▼";
+}
+</script>
+</body>
+</html>
