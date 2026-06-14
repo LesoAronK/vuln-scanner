@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VulnScan — Web Vulnerability Scanner</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">VulnScan</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#scanner">Scanner</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="https://github.com/" target="_blank" class="btn-github">View on GitHub ↗</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-tag">PASSIVE WEB SECURITY ANALYSIS</div>
+    <h1 class="hero-title">Find weaknesses<br /><span class="accent">before they do.</span></h1>
+    <p class="hero-sub">VulnScan checks URLs for common misconfigurations, missing security headers, outdated libraries, and exposed services — right in your browser.</p>
+    <a href="#scanner" class="btn-primary">Start Scanning ↓</a>
+  </section>
+
+  <!-- Scanner Section -->
+  <section class="scanner-section" id="scanner">
+    <div class="scanner-card">
+      <div class="scanner-header">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="scanner-title">Vulnerability Scanner</span>
+      </div>
+
+      <div class="input-row">
+        <input
+          type="text"
+          id="targetUrl"
+          class="url-input"
+          placeholder="https://example.com"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="btn-scan" id="scanBtn" onclick="startScan()">Scan</button>
+      </div>
+
+      <div class="scan-options">
+        <label class="option-check">
+          <input type="checkbox" id="checkHeaders" checked /> Security Headers
+        </label>
+        <label class="option-check">
+          <input type="checkbox" id="checkPorts" checked /> Common Ports
+        </label>
+        <label class="option-check">
+          <input type="checkbox" id="checkSoftware" checked /> Software Versions
+        </label>
+        <label class="option-check">
+          <input type="checkbox" id="checkSSL" checked /> SSL / HTTPS
+        </label>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-wrap" id="progressWrap" style="display:none">
+        <div class="progress-label" id="progressLabel">Initializing scan…</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="resultsArea" style="display:none">
+        <div class="results-summary" id="summaryBox"></div>
+        <div class="results-list" id="resultsList"></div>
+        <div class="report-actions">
+          <button class="btn-secondary" onclick="downloadReport()">⬇ Download Report</button>
+          <button class="btn-ghost" onclick="resetScan()">↺ Scan Again</button>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        ⚠ This tool performs passive, browser-based checks only. No actual port scanning or intrusive probing is performed. Use only on targets you own or have permission to test.
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-section" id="how-it-works">
+    <h2 class="section-title">What Gets Checked</h2>
+    <div class="checks-grid">
+      <div class="check-card">
+        <div class="check-icon">🛡</div>
+        <h3>Security Headers</h3>
+        <p>Validates presence of CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy.</p>
+      </div>
+      <div class="check-card">
+        <div class="check-icon">🔌</div>
+        <h3>Common Ports</h3>
+        <p>Simulates checks for commonly exposed services: SSH (22), FTP (21), Telnet (23), HTTP (80), HTTPS (443), MySQL (3306), and more.</p>
+      </div>
+      <div class="check-card">
+        <div class="check-icon">📦</div>
+        <h3>Software Versions</h3>
+        <p>Detects version disclosures in Server headers, X-Powered-By, and common CMS indicators that reveal outdated stacks.</p>
+      </div>
+      <div class="check-card">
+        <div class="check-icon">🔒</div>
+        <h3>SSL / HTTPS</h3>
+        <p>Checks if the site enforces HTTPS, has a valid SSL certificate, and doesn't serve mixed content over insecure HTTP.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span class="logo-text">⬡ VulnScan</span>
+    <span>Built for educational use · Deploy on GitHub Pages</span>
+    <a href="https://github.com/" target="_blank">GitHub ↗</a>
+  </footer>
+
+  <script src="js/scanner.js"></script>
+</body>
+</html>
