@@ -2,7 +2,7 @@
 
 A simple, browser-based **passive vulnerability scanner** that checks web applications for common security misconfigurations. Built as an educational mini-project for learning penetration testing concepts.
 
-🔗 **Live Demo:** `https://your-username.github.io/vulnscan`
+🔗 **Live Demo:
 
 ---
 
@@ -18,47 +18,18 @@ A simple, browser-based **passive vulnerability scanner** that checks web applic
 - Findings sorted by severity: **HIGH → MEDIUM → LOW → INFO**
 - Downloadable `.txt` vulnerability report
 - Entirely client-side — no backend, no data sent
-
 ---
-
-## Deploy to GitHub Pages
-
-### Option 1 — Upload via GitHub UI
-
-1. Create a new GitHub repository (e.g. `vulnscan`)
-2. Upload all files keeping the folder structure:
-   ```
-   index.html
-   css/style.css
-   js/scanner.js
-   README.md
-   ```
-3. Go to **Settings → Pages → Source → Deploy from branch → main → / (root)**
-4. Your site will be live at `https://your-username.github.io/vulnscan`
-
-### Option 2 — Git CLI
-
-```bash
-git clone https://github.com/your-username/vulnscan.git
-cd vulnscan
-# copy these files in
-git add .
-git commit -m "Initial VulnScan release"
-git push origin main
-# Enable Pages in repo settings
-```
-
 ---
 
 ## Project Structure
 
 ```
 vulnscan/
-├── index.html          # Main page & UI
+├── index.html         
 ├── css/
-│   └── style.css       # All styles (dark terminal theme)
+│   └── style.css       
 ├── js/
-│   └── scanner.js      # Scan logic, checks database, report generator
+│   └── scanner.js      
 └── README.md
 ```
 
