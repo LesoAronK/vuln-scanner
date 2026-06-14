@@ -10,7 +10,7 @@ A browser-based network vulnerability scanner — runs entirely on GitHub Pages,
 3. Enter a target (IP, hostname, or CIDR range)
 4. Pick a scan profile, hit Start
 
-The report appears inline — no downloads, no installs.
+The report appears online — no downloads, no installs.
 
 ---
 
