@@ -2,27 +2,6 @@
 
 A browser-based network vulnerability scanner — runs entirely on GitHub Pages, no server needed.
 
-**Live demo:** `https://YOUR_USERNAME.github.io/vuln-scanner`
-
----
-
-## Deploy in 2 steps
-
-**1. Create the repo**
-
-```
-New repo on GitHub → name it vuln-scanner → upload index.html
-```
-
-**2. Enable GitHub Pages**
-
-```
-Repo → Settings → Pages → Source: Deploy from branch → Branch: main → / (root) → Save
-```
-
-Done. Your scanner is live at `https://YOUR_USERNAME.github.io/vuln-scanner`
-
----
 
 ## How to use it
 
@@ -51,13 +30,3 @@ The report appears inline — no downloads, no installs.
 | Firewall Evasion | `-sA` | Firewall mapping |
 
 ---
-
-## Privacy
-
-- Your API key is stored in `sessionStorage` only — cleared when you close the tab
-- Scan requests go directly from your browser to `api.anthropic.com`
-- No data is stored or logged anywhere
-
----
-
-> ⚠️ **Authorized use only.** Only scan systems you own or have explicit written permission to test.
